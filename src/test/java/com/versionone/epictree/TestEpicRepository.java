@@ -2,10 +2,11 @@ package com.versionone.epictree;
 
 import static org.junit.Assert.*;
 
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
+import java.util.Map;
 
 import com.versionone.DB.DateTime;
 import com.versionone.Duration;
@@ -238,16 +239,33 @@ public class TestEpicRepository {
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
 		// And a new, uniquely-named epic
 		String epicName = "Unique Epic " + DateTime.now().toString();
-		createNewEpic(myTestProject, epicName);
+		String epicOid = createNewEpic(myTestProject, epicName).getMomentless().getToken();
 		// When I retrieve the epics
-		List<String> epics = null;
+		Map<String, Epic> epics = null;
 		try {
 			epics = repository.retreiveEpics();
 		} catch (EpicRepositoryException e) {
 			fail(e.getMessage());
 		}
 		// Then the results include the new epic
-		assertTrue(epics.contains(epicName));
+		assertTrue(epics.containsKey(epicOid));
 	}
 
+	@Test
+	public void retreiving_epics_includes_the_name_of_my_new_epic() {
+        // Given a new repository with the connection
+		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
+		// And a new, uniquely-named epic
+		String epicName = "Unique Epic " + DateTime.now().toString();
+		String epicOid = createNewEpic(myTestProject, epicName).getMomentless().getToken();
+		// When I retrieve the epics
+		Map<String, Epic> epics = null;
+		try {
+			epics = repository.retreiveEpics();
+		} catch (EpicRepositoryException e) {
+			fail(e.getMessage());
+		}
+		// Then the results include the new epic
+		assertEquals(epicName, epics.get(epicOid).name);
+	}
 }

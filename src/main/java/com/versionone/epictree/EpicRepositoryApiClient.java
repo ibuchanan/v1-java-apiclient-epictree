@@ -3,7 +3,10 @@ package com.versionone.epictree;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.versionone.DB.DateTime;
 import com.versionone.apiclient.*;
@@ -18,7 +21,7 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 	private IAttributeDefinition changeAttribute;
 	private static final DateFormat V1STYLE = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 	private Query queryForEpics;
-	private List<String> allEpics;
+	private Map<String, Epic> allEpics;
 
 	public EpicRepositoryApiClient(EnvironmentContext cx) {
 		this.cx = cx;
@@ -65,13 +68,17 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 	}
 
 	public void reload() throws EpicRepositoryException {
-		allEpics = new ArrayList<String>();
 		QueryResult result;
 		try {
 			result = cx.getServices().retrieve(queryForEpics);
+			allEpics = new HashMap<String, Epic>(result.getTotalAvaliable());
 			for (Asset asset : result.getAssets()) {
 				DateTime changeDateTime = null;
-				allEpics.add((String)asset.getAttribute(nameAttribute).getValue());
+				Epic e = new Epic();
+				e.oid = asset.getOid().getToken();
+				e.number = (String)asset.getAttribute(numberAttribute).getValue();
+				e.name = (String)asset.getAttribute(nameAttribute).getValue();
+				allEpics.put(asset.getOid().getToken(), e);
                 // Remember the most recent change to VersionOne for checking dirty state
 				changeDateTime = new DateTime(asset.getAttribute(changeAttribute).getValue());
 	            if ((null==mostRecentChangeDateTime) || (changeDateTime.compareTo(mostRecentChangeDateTime) > 0)) {
@@ -87,7 +94,7 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 		}
 	}
 
-	public List<String> retreiveEpics() throws EpicRepositoryException {
+	public Map<String, Epic> retreiveEpics() throws EpicRepositoryException {
 		if (isDirty()) {
 			reload();
         }
