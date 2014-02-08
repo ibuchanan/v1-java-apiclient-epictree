@@ -154,7 +154,7 @@ public class TestEpicRepository {
 		boolean dirty = false;
 		try {
 			dirty = repository.isDirty();
-		} catch (EpicRepositoryException e) {
+		} catch (V1RepositoryException e) {
 			fail(e.getMessage());
 		}
 		assertTrue(dirty);
@@ -165,9 +165,11 @@ public class TestEpicRepository {
 		// Given a new repository with the connection
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
 		// When I build the query for epics
-		Query query = repository.prepareQueryForEpics();
+		IAssetType assetType = cx.getMetaModel().getAssetType(repository.getAssetTypeName());
+		Query q = new Query(assetType);
+		q = repository.prepareQueryForData(q);
 		// Then the asset type is Epic
-		assertEquals("Epic", query.getAssetType().getToken());
+		assertEquals("Epic", q.getAssetType().getToken());
 	}
 	
 	@Test
@@ -175,13 +177,15 @@ public class TestEpicRepository {
 		// Given a new repository with the connection
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
 		// And a reference to the Epic asset type
-		IAssetType assetType = cx.getMetaModel().getAssetType("Epic");
+		IAssetType expectedType = cx.getMetaModel().getAssetType("Epic");
 		// And a reference to the Name attribute
-		IAttributeDefinition targetAttribute = assetType.getAttributeDefinition("Name");
+		IAttributeDefinition targetAttribute = expectedType.getAttributeDefinition("Name");
 		// When I build the query for request categories
-		Query query = repository.prepareQueryForEpics();
+		IAssetType assetType = cx.getMetaModel().getAssetType(repository.getAssetTypeName());
+		Query q = new Query(assetType);
+		q = repository.prepareQueryForData(q);
 		// Then the query selects the Name attribute
-		assertTrue(query.getSelection().contains(targetAttribute));
+		assertTrue(q.getSelection().contains(targetAttribute));
 	}
 
 	@Test
@@ -189,41 +193,47 @@ public class TestEpicRepository {
 		// Given a new repository with the connection
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
 		// And a reference to the Epic asset type
-		IAssetType assetType = cx.getMetaModel().getAssetType("Epic");
+		IAssetType expectedType = cx.getMetaModel().getAssetType("Epic");
 		// And a reference to the Number attribute
-		IAttributeDefinition targetAttribute = assetType.getAttributeDefinition("Number");
+		IAttributeDefinition targetAttribute = expectedType.getAttributeDefinition("Number");
 		// When I build the query for request categories
-		Query query = repository.prepareQueryForEpics();
+		IAssetType assetType = cx.getMetaModel().getAssetType(repository.getAssetTypeName());
+		Query q = new Query(assetType);
+		q = repository.prepareQueryForData(q);
 		// Then the query selects the Number attribute
-		assertTrue(query.getSelection().contains(targetAttribute));
+		assertTrue(q.getSelection().contains(targetAttribute));
 	}
 
 	@Test
-	public void query_for_epics_selects_change_date() {
+	public void prepared_query_change_detection_selects_change_date() {
 		// Given a new repository with the connection
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
 		// And a reference to the Epic asset type
-		IAssetType assetType = cx.getMetaModel().getAssetType("Epic");
+		IAssetType expectedType = cx.getMetaModel().getAssetType("Epic");
 		// And a reference to the ChangeDateUTC attribute
-		IAttributeDefinition targetAttribute = assetType.getAttributeDefinition("ChangeDateUTC");
+		IAttributeDefinition targetAttribute = expectedType.getAttributeDefinition("ChangeDateUTC");
 		// When I build the query for request categories
-		Query q = repository.prepareQueryForChangeDetection(repository.prepareQueryForEpics());
+		IAssetType assetType = cx.getMetaModel().getAssetType(repository.getAssetTypeName());
+		Query q = new Query(assetType);
+		q = repository.prepareQueryForChangeDetection(q);
 		// Then the query selects the ChangeDateUTC attribute
 		assertTrue(q.getSelection().contains(targetAttribute));
 	}
 	
 	@Test
-	public void query_for_epics_selects_super() {
+	public void prepared_query_for_structure_selects_super() {
 		// Given a new repository with the connection
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
 		// And a reference to the Epic asset type
-		IAssetType assetType = cx.getMetaModel().getAssetType("Epic");
+		IAssetType expectedType = cx.getMetaModel().getAssetType("Epic");
 		// And a reference to the Super attribute
-		IAttributeDefinition targetAttribute = assetType.getAttributeDefinition("Super");
+		IAttributeDefinition targetAttribute = expectedType.getAttributeDefinition("Super");
 		// When I build the query for request categories
-		Query query = repository.prepareQueryForEpics();
+		IAssetType assetType = cx.getMetaModel().getAssetType(repository.getAssetTypeName());
+		Query q = new Query(assetType);
+		q = repository.prepareQueryForStructure(q);
 		// Then the query selects the Super attribute
-		assertTrue(query.getSelection().contains(targetAttribute));
+		assertTrue(q.getSelection().contains(targetAttribute));
 	}
 
 	@Test
@@ -231,7 +241,9 @@ public class TestEpicRepository {
         // Given a new repository with the connection
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
 		// And the most recent change date from all the epics
-		Query q = repository.prepareQueryForChangeDetection(repository.prepareQueryForEpics());
+		IAssetType assetType = cx.getMetaModel().getAssetType(repository.getAssetTypeName());
+		Query q = new Query(assetType);
+		q = repository.prepareQueryForChangeDetection(q);
 		DateTime mostRecentChange = findMostRecentChangeDate(q);
 		// When I add a new epic
 		createNewEpic(myTestProject, "New Epic");
@@ -239,7 +251,7 @@ public class TestEpicRepository {
 		boolean hasChanged = false;
 		try {
 			hasChanged = repository.areThereChangedEpicsAfter(mostRecentChange);
-		} catch (EpicRepositoryException e) {
+		} catch (V1RepositoryException e) {
 			fail(e.getMessage());
 		}
 		assertTrue(hasChanged);
@@ -252,14 +264,14 @@ public class TestEpicRepository {
 		// When I reload the repository
 		try {
 			repository.reload();
-		} catch (EpicRepositoryException e) {
+		} catch (V1RepositoryException e) {
 			fail(e.getMessage());
 		}
 		// Then the repository is not dirty
 		boolean dirty = false;
 		try {
 			dirty = repository.isDirty();
-		} catch (EpicRepositoryException e) {
+		} catch (V1RepositoryException e) {
 			fail(e.getMessage());
 		}
 		assertFalse(dirty);
@@ -275,8 +287,8 @@ public class TestEpicRepository {
 		// When I retrieve the epics
 		Map<String, Epic> epics = null;
 		try {
-			epics = repository.retreiveEpics();
-		} catch (EpicRepositoryException e) {
+			epics = repository.retrieve();
+		} catch (V1RepositoryException e) {
 			fail(e.getMessage());
 		}
 		// Then the results include the new epic
@@ -293,8 +305,8 @@ public class TestEpicRepository {
 		// When I retrieve the epics
 		Map<String, Epic> epics = null;
 		try {
-			epics = repository.retreiveEpics();
-		} catch (EpicRepositoryException e) {
+			epics = repository.retrieve();
+		} catch (V1RepositoryException e) {
 			fail(e.getMessage());
 		}
 		// Then the results include the new epic
@@ -313,13 +325,13 @@ public class TestEpicRepository {
 		// When I retrieve the epics
 		Map<String, Epic> epics = null;
 		try {
-			epics = repository.retreiveEpics();
-		} catch (EpicRepositoryException e) {
+			epics = repository.retrieve();
+		} catch (V1RepositoryException e) {
 			fail(e.getMessage());
 		}
 		// Then the results include the new epic
 		String expected = parentEpic.getOid().getMomentless().getToken(); 
-		assertEquals(expected, epics.get(epicOid).parentEpic);
+		assertEquals(expected, epics.get(epicOid).parent);
 	}
 
 }
