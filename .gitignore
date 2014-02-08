@@ -1,6 +1,18 @@
+## Compiled Files ##
 *.class
 
-# Package Files #
+## Package Files ##
 *.jar
 *.war
 *.ear
+
+## Eclipse Files ##
+.metadata/
+.settings/
+.externalToolBuilders/
+bin/
+*.launch
+local.properties
+
+## Maven Files ##
+target/
