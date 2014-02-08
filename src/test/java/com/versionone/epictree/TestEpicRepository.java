@@ -334,4 +334,27 @@ public class TestEpicRepository {
 		assertEquals(expected, epics.get(epicOid).parent);
 	}
 
+	@Test
+	public void child_epics_have_pathname_including_the_parent() {
+        // Given a new repository with the connection
+		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
+		// And a new, uniquely-named epic
+		String parentName = "Parent Epic " + DateTime.now().toString();
+		Asset parentEpic = createNewEpic(myTestProject, parentName);
+		// And a new child epic under that
+		String childName = "Child Epic " + DateTime.now().toString();
+		String epicOid = createNewChildEpic(myTestProject, parentEpic, childName).getOid().getMomentless().getToken();
+		// When I retrieve the epics
+		Map<String, Epic> epics = null;
+		try {
+			epics = repository.retrieve();
+		} catch (V1RepositoryException e) {
+			fail(e.getMessage());
+		}
+		// Then the child epic has a pathname with both epic names.
+		String expected = parentName + "\\" + childName; 
+		assertEquals(expected, epics.get(epicOid).pathname);
+	}
+
+
 }

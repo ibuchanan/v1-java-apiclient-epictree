@@ -6,5 +6,6 @@ public class Epic {
 	public String number;
 	public String name;
 	public String parent;
+	public String pathname;
 	
 }

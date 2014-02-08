@@ -2,8 +2,11 @@ package com.versionone.epictree;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 
 import com.versionone.DB.DateTime;
 import com.versionone.Oid;
@@ -81,12 +84,34 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 
 	public void reload() throws V1RepositoryException {
 		QueryResult result;
+		DateTime changeDateTime = null;
 		try {
 			result = cx.getServices().retrieve(dataQuery);
 			dtoCache = new HashMap<String, Epic>(result.getTotalAvaliable());
-			for (Asset asset : result.getAssets()) {
-				DateTime changeDateTime = null;
-				dtoCache.put(asset.getOid().getToken(), convert(asset));
+			Queue<Asset> assetQueue = new ArrayDeque<Asset>(Arrays.asList(result.getAssets()));
+			while (null!=assetQueue.peek()) {
+				Asset asset = assetQueue.poll();
+				Oid parent = (Oid)asset.getAttribute(parentAttribute).getValue();
+				if (Oid.Null.equals(parent)) {
+					Epic e = convert(asset);
+					String oid = asset.getOid().getToken();
+					e.pathname = e.name;
+					dtoCache.put(oid, e);
+					continue;
+				}
+				
+				// Defer processing if the parent has not yet been mapped
+				if (!dtoCache.containsKey(parent.getToken())) {
+					assetQueue.add(asset);
+					continue;
+				}
+				
+				Epic e = convert(asset);
+				String oid = asset.getOid().getToken();
+				e.pathname = dtoCache.get(((Oid)asset.getAttribute(parentAttribute).getValue()).getToken()).pathname
+						+ "\\" + e.name;
+				dtoCache.put(oid, e);
+				
                 // Remember the most recent change to VersionOne for checking dirty state
 				changeDateTime = new DateTime(asset.getAttribute(changeAttribute).getValue());
 	            if ((null==mostRecentChangeDateTime) || (changeDateTime.compareTo(mostRecentChangeDateTime) > 0)) {
