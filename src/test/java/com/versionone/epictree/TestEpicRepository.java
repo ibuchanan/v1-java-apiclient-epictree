@@ -167,6 +167,20 @@ public class TestEpicRepository {
 	}
 
 	@Test
+	public void query_for_epics_selects_number() {
+		// Given a new repository with the connection
+		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
+		// And a reference to the Epic asset type
+		IAssetType assetType = cx.getMetaModel().getAssetType("Epic");
+		// And a reference to the Number attribute
+		IAttributeDefinition targetAttribute = assetType.getAttributeDefinition("Number");
+		// When I build the query for request categories
+		Query query = repository.buildQueryForEpics();
+		// Then the query selects the Number attribute
+		assertTrue(query.getSelection().contains(targetAttribute));
+	}
+
+	@Test
 	public void query_for_epics_selects_change_date() {
 		// Given a new repository with the connection
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
