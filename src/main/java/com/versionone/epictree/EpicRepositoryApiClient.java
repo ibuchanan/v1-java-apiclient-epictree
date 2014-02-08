@@ -110,6 +110,7 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 				String oid = asset.getOid().getToken();
 				e.pathname = dtoCache.get(((Oid)asset.getAttribute(parentAttribute).getValue()).getToken()).pathname
 						+ "\\" + e.name;
+				dtoCache.get(parent.getToken()).children.add(e);
 				dtoCache.put(oid, e);
 				
                 // Remember the most recent change to VersionOne for checking dirty state

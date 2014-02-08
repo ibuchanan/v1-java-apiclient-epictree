@@ -357,4 +357,26 @@ public class TestEpicRepository {
 	}
 
 
+	@Test
+	public void parent_epics_have_a_list_of_children() {
+        // Given a new repository with the connection
+		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
+		// And a new, uniquely-named epic
+		String parentName = "Parent Epic " + DateTime.now().toString();
+		Asset parentEpic = createNewEpic(myTestProject, parentName);
+		String epicOid = parentEpic.getOid().getMomentless().getToken();
+		// And a new child epic under that
+		String childName = "Child Epic " + DateTime.now().toString();
+		Asset childEpic = createNewChildEpic(myTestProject, parentEpic, childName);
+		// When I retrieve the epics
+		Map<String, Epic> epics = null;
+		try {
+			epics = repository.retrieve();
+		} catch (V1RepositoryException e) {
+			fail(e.getMessage());
+		}
+		// Then there is exactly 1 child
+		assertEquals(1,epics.get(epicOid).children.size());
+	}
+
 }
