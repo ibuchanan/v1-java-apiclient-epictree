@@ -151,17 +151,31 @@ public class TestEpicRepository {
 	}
 	
 	@Test
+	public void query_for_epics_selects_name() {
+		// Given a new repository with the connection
+		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
+		// And a reference to the Epic asset type
+		IAssetType assetType = cx.getMetaModel().getAssetType("Epic");
+		// And a reference to the Name attribute
+		IAttributeDefinition targetAttribute = assetType.getAttributeDefinition("Name");
+		// When I build the query for request categories
+		Query query = repository.buildQueryForEpics();
+		// Then the query selects the Name attribute
+		assertTrue(query.getSelection().contains(targetAttribute));
+	}
+
+	@Test
 	public void query_for_epics_selects_change_date() {
 		// Given a new repository with the connection
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
 		// And a reference to the Epic asset type
 		IAssetType assetType = cx.getMetaModel().getAssetType("Epic");
 		// And a reference to the ChangeDateUTC attribute
-		IAttributeDefinition changeAttribute = assetType.getAttributeDefinition("ChangeDateUTC");
+		IAttributeDefinition targetAttribute = assetType.getAttributeDefinition("ChangeDateUTC");
 		// When I build the query for request categories
 		Query query = repository.buildQueryForEpics();
 		// Then the query selects the ChangeDateUTC attribute
-		assertTrue(query.getSelection().contains(changeAttribute));
+		assertTrue(query.getSelection().contains(targetAttribute));
 	}
 	
 	@Test
@@ -201,6 +215,5 @@ public class TestEpicRepository {
 		}
 		assertFalse(dirty);
 	}
-
 
 }

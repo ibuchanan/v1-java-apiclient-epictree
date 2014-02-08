@@ -11,6 +11,7 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 	private DateTime mostRecentChangeDateTime;
 	private EnvironmentContext cx;
 	private IAssetType epicType;
+	private IAttributeDefinition nameAttribute;
 	private IAttributeDefinition changeAttribute;
 	private static final DateFormat V1STYLE = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 	private Query queryForEpics;
@@ -19,6 +20,7 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 		this.cx = cx;
 		mostRecentChangeDateTime = null;
 		epicType = cx.getMetaModel().getAssetType("Epic");
+		nameAttribute = epicType.getAttributeDefinition("Name");
 		changeAttribute = epicType.getAttributeDefinition("ChangeDateUTC");
 		queryForEpics = buildQueryForEpics();
 	}
@@ -32,6 +34,7 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 
 	public Query buildQueryForEpics() {
 		Query query = new Query(epicType);
+		query.getSelection().add(nameAttribute);
 		query.getSelection().add(changeAttribute);
 		return query;
 	}
