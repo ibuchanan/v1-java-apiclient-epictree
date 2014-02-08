@@ -113,7 +113,7 @@ public class TestEpicRepository {
 		return newProject;
 	}
 
-	private Oid createNewEpic(Asset parentProject, String name) {
+	private Asset createNewEpic(Asset parentProject, String name) {
 		IAssetType epicType = cx.getMetaModel().getAssetType("Epic");
 		IAttributeDefinition nameAttr = epicType.getAttributeDefinition("Name");
 		Asset newEpic = null;
@@ -125,7 +125,24 @@ public class TestEpicRepository {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return newEpic.getOid();
+		return newEpic;
+	}
+
+	private Asset createNewChildEpic(Asset parentProject, Asset parentEpic, String name) {
+		IAssetType epicType = cx.getMetaModel().getAssetType("Epic");
+		IAttributeDefinition nameAttr = epicType.getAttributeDefinition("Name");
+		IAttributeDefinition superAttr = epicType.getAttributeDefinition("Super");
+		Asset newEpic = null;
+		try {
+			newEpic = cx.getServices().createNew(epicType, parentProject.getOid());
+			newEpic.setAttributeValue(nameAttr, name);
+			newEpic.setAttributeValue(superAttr, parentEpic.getOid());
+			cx.getServices().save(newEpic);
+		} catch (V1Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return newEpic;
 	}
 
 	
@@ -196,6 +213,20 @@ public class TestEpicRepository {
 	}
 	
 	@Test
+	public void query_for_epics_selects_super() {
+		// Given a new repository with the connection
+		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
+		// And a reference to the Epic asset type
+		IAssetType assetType = cx.getMetaModel().getAssetType("Epic");
+		// And a reference to the Super attribute
+		IAttributeDefinition targetAttribute = assetType.getAttributeDefinition("Super");
+		// When I build the query for request categories
+		Query query = repository.buildQueryForEpics();
+		// Then the query selects the Super attribute
+		assertTrue(query.getSelection().contains(targetAttribute));
+	}
+
+	@Test
 	public void detect_a_new_epic_as_a_change_since_change_date() {
         // Given a new repository with the connection
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
@@ -239,7 +270,7 @@ public class TestEpicRepository {
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
 		// And a new, uniquely-named epic
 		String epicName = "Unique Epic " + DateTime.now().toString();
-		String epicOid = createNewEpic(myTestProject, epicName).getMomentless().getToken();
+		String epicOid = createNewEpic(myTestProject, epicName).getOid().getMomentless().getToken();
 		// When I retrieve the epics
 		Map<String, Epic> epics = null;
 		try {
@@ -257,7 +288,7 @@ public class TestEpicRepository {
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
 		// And a new, uniquely-named epic
 		String epicName = "Unique Epic " + DateTime.now().toString();
-		String epicOid = createNewEpic(myTestProject, epicName).getMomentless().getToken();
+		String epicOid = createNewEpic(myTestProject, epicName).getOid().getMomentless().getToken();
 		// When I retrieve the epics
 		Map<String, Epic> epics = null;
 		try {
@@ -268,4 +299,26 @@ public class TestEpicRepository {
 		// Then the results include the new epic
 		assertEquals(epicName, epics.get(epicOid).name);
 	}
+
+	@Test
+	public void retreiving_epics_includes_the_parent_epic_of_my_new_child_epic() {
+        // Given a new repository with the connection
+		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
+		// And a new, uniquely-named epic
+		String epicName = "Unique Epic " + DateTime.now().toString();
+		Asset parentEpic = createNewEpic(myTestProject, epicName);
+		// And a new child epic under that
+		String epicOid = createNewChildEpic(myTestProject, parentEpic, epicName).getOid().getMomentless().getToken();
+		// When I retrieve the epics
+		Map<String, Epic> epics = null;
+		try {
+			epics = repository.retreiveEpics();
+		} catch (EpicRepositoryException e) {
+			fail(e.getMessage());
+		}
+		// Then the results include the new epic
+		String expected = parentEpic.getOid().getMomentless().getToken(); 
+		assertEquals(expected, epics.get(epicOid).parentEpic);
+	}
+
 }

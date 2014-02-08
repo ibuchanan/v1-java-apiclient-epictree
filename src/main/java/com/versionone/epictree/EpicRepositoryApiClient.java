@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.versionone.DB.DateTime;
+import com.versionone.Oid;
 import com.versionone.apiclient.*;
 
 public class EpicRepositoryApiClient implements IEpicRepository {
@@ -19,6 +20,7 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 	private IAttributeDefinition nameAttribute;
 	private IAttributeDefinition numberAttribute;
 	private IAttributeDefinition changeAttribute;
+	private IAttributeDefinition parentAttribute;
 	private static final DateFormat V1STYLE = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 	private Query queryForEpics;
 	private Map<String, Epic> allEpics;
@@ -30,6 +32,7 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 		nameAttribute = epicType.getAttributeDefinition("Name");
 		numberAttribute = epicType.getAttributeDefinition("Number");
 		changeAttribute = epicType.getAttributeDefinition("ChangeDateUTC");
+		parentAttribute = epicType.getAttributeDefinition("Super");
 		queryForEpics = buildQueryForEpics();
 	}
 
@@ -45,6 +48,7 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 		query.getSelection().add(nameAttribute);
 		query.getSelection().add(numberAttribute);
 		query.getSelection().add(changeAttribute);
+		query.getSelection().add(parentAttribute);
 		return query;
 	}
 
@@ -78,6 +82,7 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 				e.oid = asset.getOid().getToken();
 				e.number = (String)asset.getAttribute(numberAttribute).getValue();
 				e.name = (String)asset.getAttribute(nameAttribute).getValue();
+				e.parentEpic = ((Oid)asset.getAttribute(parentAttribute).getValue()).getToken();
 				allEpics.put(asset.getOid().getToken(), e);
                 // Remember the most recent change to VersionOne for checking dirty state
 				changeDateTime = new DateTime(asset.getAttribute(changeAttribute).getValue());
