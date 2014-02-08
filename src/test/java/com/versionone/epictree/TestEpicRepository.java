@@ -2,21 +2,28 @@ package com.versionone.epictree;
 
 import static org.junit.Assert.*;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.versionone.apiclient.*;
 
 public class TestEpicRepository {
-
-	@Test
-	public void new_repository_is_dirty() {
+	
+	private EnvironmentContext cx;
+	
+	@Before
+	public void setupVersionOneInstance() {
 		// Given a connection to a VersionOne instance
-		EnvironmentContext cx = null;
 		try {
 			cx = new EnvironmentContext();
 		} catch (Exception e) {
-			fail(e.getMessage());
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+	}
+	
+	@Test
+	public void new_repository_is_dirty() {
         // When I create a new repository with that connection
 		IEpicRepository repository = new EpicRepositoryApiClient(cx);
         // Then it is initially dirty
@@ -29,4 +36,13 @@ public class TestEpicRepository {
 		assertTrue(dirty);
 	}
 
+	@Test
+	public void query_for_epics_is_scoped_to_epic() {
+		// Given a new repository with the connection
+		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
+		// When I build the query for epics
+		Query query = repository.buildQueryForEpics();
+		// Then the asset type is Epic
+		assertEquals("Epic", query.getAssetType().getToken());
+	}
 }
