@@ -2,6 +2,8 @@ package com.versionone.epictree;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -214,6 +216,24 @@ public class TestEpicRepository {
 			fail(e.getMessage());
 		}
 		assertFalse(dirty);
+	}
+	
+	@Test
+	public void retreiving_epics_includes_my_new_epic() {
+        // Given a new repository with the connection
+		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
+		// And a new, uniquely-named epic
+		String epicName = "Unique Epic " + DateTime.now().toString();
+		createNewEpic(myTestProject, epicName);
+		// When I retrieve the epics
+		List<String> epics = null;
+		try {
+			epics = repository.retreiveEpics();
+		} catch (EpicRepositoryException e) {
+			fail(e.getMessage());
+		}
+		// Then the results include the new epic
+		assertTrue(epics.contains(epicName));
 	}
 
 }
