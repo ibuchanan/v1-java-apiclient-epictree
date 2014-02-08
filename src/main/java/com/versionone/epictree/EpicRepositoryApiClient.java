@@ -13,12 +13,14 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 	private IAssetType epicType;
 	private IAttributeDefinition changeAttribute;
 	private static final DateFormat V1STYLE = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+	private Query queryForEpics;
 
 	public EpicRepositoryApiClient(EnvironmentContext cx) {
 		this.cx = cx;
 		mostRecentChangeDateTime = null;
 		epicType = cx.getMetaModel().getAssetType("Epic");
 		changeAttribute = epicType.getAttributeDefinition("ChangeDateUTC");
+		queryForEpics = buildQueryForEpics();
 	}
 
 	public boolean isDirty() throws EpicRepositoryException {
@@ -51,5 +53,27 @@ public class EpicRepositoryApiClient implements IEpicRepository {
 			throw new EpicRepositoryException(e);
 		}
 		return result.getTotalAvaliable() > 0;
+	}
+
+	public void reload() throws EpicRepositoryException {
+		QueryResult result;
+		try {
+			result = cx.getServices().retrieve(queryForEpics);
+			for (Asset asset : result.getAssets()) {
+				DateTime changeDateTime = null;
+                // Remember the most recent change to VersionOne for checking dirty state
+				changeDateTime = new DateTime(asset.getAttribute(changeAttribute).getValue());
+	            if ((null==mostRecentChangeDateTime) || (changeDateTime.compareTo(mostRecentChangeDateTime) > 0))
+	            {
+	                mostRecentChangeDateTime = changeDateTime;
+	            }
+			}
+		} catch (ConnectionException e) {
+			throw new EpicRepositoryException(e);
+		} catch (APIException e) {
+			throw new EpicRepositoryException(e);
+		} catch (OidException e) {
+			throw new EpicRepositoryException(e);
+		}
 	}
 }

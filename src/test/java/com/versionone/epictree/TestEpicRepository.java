@@ -181,5 +181,26 @@ public class TestEpicRepository {
 		}
 		assertTrue(hasChanged);
 	}
+	
+	@Test
+	public void reload_is_clean() {
+        // Given a new repository with the connection
+		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
+		// When I reload the repository
+		try {
+			repository.reload();
+		} catch (EpicRepositoryException e) {
+			fail(e.getMessage());
+		}
+		// Then the repository is not dirty
+		boolean dirty = false;
+		try {
+			dirty = repository.isDirty();
+		} catch (EpicRepositoryException e) {
+			fail(e.getMessage());
+		}
+		assertFalse(dirty);
+	}
+
 
 }
