@@ -165,7 +165,7 @@ public class TestEpicRepository {
 		// Given a new repository with the connection
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
 		// When I build the query for epics
-		Query query = repository.buildQueryForEpics();
+		Query query = repository.prepareQueryForEpics();
 		// Then the asset type is Epic
 		assertEquals("Epic", query.getAssetType().getToken());
 	}
@@ -179,7 +179,7 @@ public class TestEpicRepository {
 		// And a reference to the Name attribute
 		IAttributeDefinition targetAttribute = assetType.getAttributeDefinition("Name");
 		// When I build the query for request categories
-		Query query = repository.buildQueryForEpics();
+		Query query = repository.prepareQueryForEpics();
 		// Then the query selects the Name attribute
 		assertTrue(query.getSelection().contains(targetAttribute));
 	}
@@ -193,7 +193,7 @@ public class TestEpicRepository {
 		// And a reference to the Number attribute
 		IAttributeDefinition targetAttribute = assetType.getAttributeDefinition("Number");
 		// When I build the query for request categories
-		Query query = repository.buildQueryForEpics();
+		Query query = repository.prepareQueryForEpics();
 		// Then the query selects the Number attribute
 		assertTrue(query.getSelection().contains(targetAttribute));
 	}
@@ -207,9 +207,9 @@ public class TestEpicRepository {
 		// And a reference to the ChangeDateUTC attribute
 		IAttributeDefinition targetAttribute = assetType.getAttributeDefinition("ChangeDateUTC");
 		// When I build the query for request categories
-		Query query = repository.buildQueryForEpics();
+		Query q = repository.prepareQueryForChangeDetection(repository.prepareQueryForEpics());
 		// Then the query selects the ChangeDateUTC attribute
-		assertTrue(query.getSelection().contains(targetAttribute));
+		assertTrue(q.getSelection().contains(targetAttribute));
 	}
 	
 	@Test
@@ -221,7 +221,7 @@ public class TestEpicRepository {
 		// And a reference to the Super attribute
 		IAttributeDefinition targetAttribute = assetType.getAttributeDefinition("Super");
 		// When I build the query for request categories
-		Query query = repository.buildQueryForEpics();
+		Query query = repository.prepareQueryForEpics();
 		// Then the query selects the Super attribute
 		assertTrue(query.getSelection().contains(targetAttribute));
 	}
@@ -231,7 +231,8 @@ public class TestEpicRepository {
         // Given a new repository with the connection
 		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
 		// And the most recent change date from all the epics
-		DateTime mostRecentChange = findMostRecentChangeDate(repository.buildQueryForEpics());
+		Query q = repository.prepareQueryForChangeDetection(repository.prepareQueryForEpics());
+		DateTime mostRecentChange = findMostRecentChangeDate(q);
 		// When I add a new epic
 		createNewEpic(myTestProject, "New Epic");
         // Then a change is detected
