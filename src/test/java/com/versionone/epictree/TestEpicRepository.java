@@ -45,4 +45,18 @@ public class TestEpicRepository {
 		// Then the asset type is Epic
 		assertEquals("Epic", query.getAssetType().getToken());
 	}
+	
+	@Test
+	public void query_for_epics_selects_change_date() {
+		// Given a new repository with the connection
+		EpicRepositoryApiClient repository = new EpicRepositoryApiClient(cx);
+		// And a reference to the Epic asset type
+		IAssetType assetType = cx.getMetaModel().getAssetType("Epic");
+		// And a reference to the ChangeDateUTC attribute
+		IAttributeDefinition changeAttribute = assetType.getAttributeDefinition("ChangeDateUTC");
+		// When I build the query for request categories
+		Query query = repository.buildQueryForEpics();
+		// Then the query selects the ChangeDateUTC attribute
+		assertTrue(query.getSelection().contains(changeAttribute));
+	}
 }
